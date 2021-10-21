@@ -68,6 +68,9 @@ static void Timeout_Callback(void *data)
 	if (maze_window->Update(frame_time) )
 		maze_window->redraw();
 
+	if (map_window->Update(frame_time) && maze_window)
+		maze_window->redraw();
+
 	// Draw the frustum back on.
 	if (map_window)
 		map_window->Draw_Frustum();
@@ -86,7 +89,7 @@ static void Load_Callback(Fl_Widget *widget, void *data)
 	const char	*filename;
 	Maze	*new_maze;
 
-	filename = fl_input("Enter the filename:", PROJECT_DIR "/Sources/maze-1x1");
+	filename = fl_input("Enter the filename:", PROJECT_DIR "/assets/maze-4x4");
 
 	if ( ! filename )
 		return;

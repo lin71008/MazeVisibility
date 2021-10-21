@@ -205,7 +205,7 @@ handle(int event)
 			x_last = Fl::event_x();
 			y_last = Fl::event_y();
 			return 1;
-			case FL_RELEASE:
+		case FL_RELEASE:
 			down = false;
 			return 1;
 		case FL_KEYBOARD:

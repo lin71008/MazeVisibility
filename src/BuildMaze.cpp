@@ -99,7 +99,7 @@ static void Save_Callback(Fl_Widget *widget, void *data)
 		return;
 	}
 
-	filename = fl_input("Enter the filename:", "maze-1x1");
+	filename = fl_input("Enter the filename:", PROJECT_DIR "/assets/maze-save");
 
 	if ( ! filename )
 		return;

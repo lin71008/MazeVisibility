@@ -34,6 +34,9 @@ class MapWidget : public Fl_Widget {
 		// draw() method for the widget
 		void	draw(void);
 
+		// Event handling method for FLTK
+		int	handle(int);
+
 		// Draws the view frustum on the map
 		void	Draw_Frustum(void);
 
@@ -43,7 +46,11 @@ class MapWidget : public Fl_Widget {
 		// Tells the widget which maze to display. This causes a redraw.
 		void	Set_Maze(Maze*);
 
+		bool	Update(float);
+
 	public:
+		bool down;
+		float dx, dy, dr;
 		Maze	*maze;	// The maze to display
 };
 

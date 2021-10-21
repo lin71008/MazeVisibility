@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include "MapWidget.h"
+#include <Fl/Fl.h>
 #include <Fl/fl_draw.h>
 #include <Fl/Fl_Window.h>
 
@@ -32,6 +33,8 @@ MapWidget(int x, int y, int width, int height, const char *label, Maze *m)
 //=============================================================================
 {
     maze = m;
+    down = false;
+    dx = dy = dr = 0.0;
 }
 
 
@@ -136,4 +139,62 @@ Undraw_Frustum(void)
 
 		fl_pop_clip();
 	}
+}
+
+
+int MapWidget::
+handle(int event)
+{
+	if (!maze)
+		return 1;
+	
+	float vdx = cos(Maze::To_Radians(maze->viewer_dir));
+	float vdy = sin(Maze::To_Radians(maze->viewer_dir));
+	
+	switch (event)
+	{
+		case FL_KEYBOARD:
+			down = false;
+			if (Fl::event_key() == FL_Up)
+			{
+				dx = 0.1 * vdx;
+				dy = 0.1 * vdy;
+				down = true;
+			}
+			if (Fl::event_key() == FL_Down)
+			{
+				dx = -0.1 * vdx;
+				dy = -0.1 * vdy;
+				down = true;
+			}
+			if (Fl::event_key() == FL_Left)
+			{
+				dr = 5.0;
+				down = true;
+			}
+			if (Fl::event_key() == FL_Right)
+			{
+				dr = -5.0;
+				down = true;
+			}
+			return 1;
+		case FL_KEYUP:
+		case FL_RELEASE:
+			down = false;
+			return 1;
+	}
+	return 1;
+}
+
+bool MapWidget::
+Update(float dt)
+{
+	if ( down )
+	{
+		maze->Move_View_Posn(dx, dy, 0.0);
+		maze->Set_View_Dir(maze->viewer_dir + dr);
+		dx = dy = dr = 0.0;
+		return true;
+	}
+	return false;
 }
