@@ -50,6 +50,7 @@ class Edge {
 		// is one of the constants defined above (LEFT, RIGHT, ON). See above
 		// for a discussion of which side is left and which is right.
 		char	Point_Side(float x, float y);
+		char	Point_Side(Vertex*);
 
   public:
 		// Constants.

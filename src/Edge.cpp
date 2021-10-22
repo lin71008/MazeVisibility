@@ -103,4 +103,23 @@ Point_Side(float x, float y)
 		return RIGHT;
 }
 
+char Edge::
+Point_Side(Vertex *v)
+//=======================================================================
+{
+	float   det;
 
+	det = endpoints[START]->posn[Vertex::X] * 
+			( endpoints[END]->posn[Vertex::Y] - v->posn[Vertex::Y] ) - 
+			endpoints[START]->posn[Vertex::Y] * 
+			( endpoints[END]->posn[Vertex::X] - v->posn[Vertex::X] ) +
+			endpoints[END]->posn[Vertex::X] * v->posn[Vertex::Y]	- 
+			endpoints[END]->posn[Vertex::Y] * v->posn[Vertex::X];
+    
+	if ( det == 0.0 )
+		return ON;
+	else if ( det > 0.0 )
+		return LEFT;
+	else
+		return RIGHT;
+}

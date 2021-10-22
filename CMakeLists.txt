@@ -20,7 +20,8 @@ add_executable(MazeVisibility
     ${SRC_DIR}Maze.cpp
     ${SRC_DIR}MazeWindow.h
     ${SRC_DIR}MazeWindow.cpp
-    ${SRC_DIR}RunMaze.cpp)
+    ${SRC_DIR}RunMaze.cpp
+    )
 
 add_library(Maze 
     ${SRC_DIR}Cell.h
@@ -31,8 +32,14 @@ add_library(Maze
     ${SRC_DIR}LineSeg.cpp
     ${SRC_DIR}Point.h
     ${SRC_DIR}Vertex.cpp
-    ${SRC_DIR}Vertex.h)
+    ${SRC_DIR}Vertex.h
+    )
+
+add_library(Matrix
+    ${SRC_DIR}Matrix.h
+    ${SRC_DIR}Matrix.cpp
+    )
 
 target_link_libraries(MazeVisibility fltk fltk_forms fltk_images fltk_jpeg fltk_png fltk_gl crypt32 comctl32)
 target_link_libraries(MazeVisibility opengl32 glew32 freeglut glu32)
-target_link_libraries(MazeVisibility Maze)
+target_link_libraries(MazeVisibility Maze Matrix)

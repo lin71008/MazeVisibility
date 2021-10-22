@@ -121,4 +121,12 @@ and contain an wall locate at `(0, 2)` to `(2, 2)`.
 
 ### Render Algorithm
 
-TODO.
+1. Get Viewer Cell.
+
+2. Check whether each surface at the cell boundary is in the view volume, and discard the surface that are not in the view volume.
+
+3. Check whether each remaining surface is transparent, if not, add surface to render buffer.
+
+4. Clipping view volume, go to adjacent cell, and then recursive step 2 to 4.
+
+5. Render surface at render buffer using the first-in-last-out order.

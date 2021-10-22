@@ -20,6 +20,7 @@
 #define _MAZE_H_
 
 #include <FL/math.h> // Use FLTK's math header because it defines M_PI
+#include "Matrix.h"
 #include "Cell.h"
 
 //************************************************************************
