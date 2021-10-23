@@ -121,7 +121,7 @@ operator+(const Vector4f &v0)
     Vector4f v1(data[0] + v0.data[0],
                 data[1] + v0.data[1],
                 data[2] + v0.data[2],
-                data[3] + v0.data[3]);
+                data[3]);
     return v1;
 }
 
@@ -131,17 +131,27 @@ operator-(const Vector4f &v0)
     Vector4f v1(data[0] - v0.data[0],
                 data[1] - v0.data[1],
                 data[2] - v0.data[2],
-                data[3] - v0.data[3]);
+                data[3]);
     return v1;
 }
 
 Vector4f Vector4f::
 operator*(const float &f)
 {
-    Vector4f v1(f * data[0],
-                f * data[1],
-                f * data[2],
-                f * data[3]);
+    Vector4f v1(data[0] * f,
+                data[1] * f,
+                data[2] * f,
+                data[3]);
+    return v1;   
+}
+
+Vector4f Vector4f::
+operator/(const float &f)
+{
+    Vector4f v1(data[0] / f,
+                data[1] / f,
+                data[2] / f,
+                data[3]);
     return v1;   
 }
 
@@ -152,8 +162,7 @@ operator*(const Vector4f &v0)
 {
 	return ( data[0] * v0.data[0]
 	  	   + data[1] * v0.data[1]
-	  	   + data[2] * v0.data[2]
-	  	   + data[3] * v0.data[3] );
+	  	   + data[2] * v0.data[2] );
 }
 
 float Vector4f::
@@ -161,8 +170,17 @@ norm(void)
 {
 	return ( data[0] * data[0]
 		   + data[1] * data[1]
-		   + data[2] * data[2]
-		   + data[3] * data[3] );
+		   + data[2] * data[2] );
+}
+
+Vector4f Vector4f::
+cross(const Vector4f &v0)
+{
+    Vector4f v1(data[1] * v0.data[2] - data[2] * v0.data[1],
+                data[2] * v0.data[0] - data[0] * v0.data[2],
+                data[0] * v0.data[1] - data[1] * v0.data[0],
+                data[3]);
+    return v1;
 }
 
 Matrix44f::

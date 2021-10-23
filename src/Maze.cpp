@@ -24,6 +24,13 @@
 #include <time.h>
 #include <FL/Fl.h>
 #include <FL/fl_draw.h>
+#include <FL/math.h>
+#include <FL/gl.h>
+#include <GL/glu.h>
+#include "Matrix.h"
+#include <algorithm>
+#include <vector>
+#include <tuple>
 
 const char Maze::X = 0;
 const char Maze::Y = 1;
@@ -630,14 +637,185 @@ void Maze::
 Draw_View(const float focal_dist)
 //======================================================================
 {
-	frame_num++;
+	const float zFar  = focal_dist;
+	const float zNear =    1.0e-5f;
 
-	//###################################################################
-	// TODO
-	// The rest is up to you!
-	//###################################################################
+	const float t = zNear * tan(To_Radians(viewer_fov / 2.0f));
+	const float r = t * 1.0f;
+
+	Matrix44f invVRP(16, 1.f, 0.f, 0.f, -viewer_posn[X],
+					 0.f, 1.f, 0.f, -viewer_posn[Y],
+					 0.f, 0.f, 1.f, -viewer_posn[Z],
+					 0.f, 0.f, 0.f, 1.f);
+
+	Matrix44f invVRD(16, -sin(To_Radians(-viewer_dir)), -cos(To_Radians(-viewer_dir)), 0.f, 0.f,
+					 0.f, 0.f, 1.f, 0.f,
+					 cos(To_Radians(-viewer_dir)), -sin(To_Radians(-viewer_dir)), 0.0f, 0.f,
+					 0.f, 0.f, 0.f, 1.f);
+
+	Matrix44f proj(16, zNear / r, 0.f, 0.f, 0.f,
+				    0.f, zNear / t, 0.f, 0.f,
+				    0.f, 0.f, zFar / (zFar - zNear), -(zFar * zNear) / (zFar - zNear),
+				    0.f, 0.f, 1.f, 0.f);
+
+	Vector4f v0( -t, -1.f, zNear, 1.f );
+	Vector4f v1( -t,  1.f, zNear, 1.f );
+	Vector4f v2(  t,  1.f, zNear, 1.f );
+	Vector4f v3(  t, -1.f, zNear, 1.f );
+	Matrix44f view_volume(v0, v1, v2, v3);
+
+	Matrix44f world_to_view = invVRD * invVRP;
+
+	std::vector<std::tuple<float, float*, Matrix44f>> buffer;
+
+	Draw_View_Recursive(buffer, view_cell, NULL, world_to_view, proj, view_volume, 0);
+
+	for (auto it = buffer.begin(); it != buffer.end(); ++it)
+	{
+		Matrix44f m2 = std::get<2>(*it);
+		float *c2 = std::get<1>(*it);
+		
+		glBegin(GL_TRIANGLES);
+		glColor3f(c2[0], c2[1], c2[2]);
+		glVertex2f(m2[0][0] * 300.f, m2[1][0] * 300.f);
+		glVertex2f(m2[0][1] * 300.f, m2[1][1] * 300.f);
+		glVertex2f(m2[0][2] * 300.f, m2[1][2] * 300.f);
+		glEnd();
+
+		glBegin(GL_TRIANGLES);
+		glColor3f(.9 * c2[0], .9 * c2[1], .9 * c2[2]);
+		glVertex2f(m2[0][2] * 300.f, m2[1][2] * 300.f);
+		glVertex2f(m2[0][3] * 300.f, m2[1][3] * 300.f);
+		glVertex2f(m2[0][0] * 300.f, m2[1][0] * 300.f);
+		glEnd();
+	}
 }
 
+void Maze::
+Draw_View_Recursive( std::vector<std::tuple<float, float*, Matrix44f>> &buffer, Cell *c, const Edge *ei, Matrix44f world_to_view, Matrix44f proj, Matrix44f view_volume, int d)
+{
+	if (c == NULL || d > 10) return;
+
+	for (int i = 0; i < 4; ++i)
+	{
+		Edge *e = c->edges[i];
+		if (ei != NULL && ei->index == e->index) continue;
+		
+		const float xs = e->endpoints[Edge::START]->posn[Vertex::X];
+		const float ys = e->endpoints[Edge::START]->posn[Vertex::Y];
+		const float xe = e->endpoints[Edge::END]->posn[Vertex::X];
+		const float ye = e->endpoints[Edge::END]->posn[Vertex::Y];
+
+		Vector4f v0 = view_volume.vec(0);     
+		Vector4f v1 = view_volume.vec(1);     
+		Vector4f v2 = view_volume.vec(2);     
+		Vector4f v3 = view_volume.vec(3);     
+		
+		Vector4f n_zNear = (v1 - v0).cross(v3 - v0);
+		Vector4f n_Left  = Vector4f(0.f, 1.f, 0.f, 1.f).cross(v0);
+		Vector4f n_Right = Vector4f(0.f, 1.f, 0.f, 1.f).cross(v3);
+
+		Vector4f E0 = world_to_view * Vector4f(xs, ys, -1.f, 1.f);
+		Vector4f E1 = world_to_view * Vector4f(xs, ys,  1.f, 1.f);
+		Vector4f E2 = world_to_view * Vector4f(xe, ye,  1.f, 1.f);
+		Vector4f E3 = world_to_view * Vector4f(xe, ye, -1.f, 1.f);
+
+		if (E0.cross(E3) * Vector4f(0.f, 1.f, 0.f, 1.f) < 0.f) std::swap(E0, E3);
+		if (E1.cross(E2) * Vector4f(0.f, 1.f, 0.f, 1.f) < 0.f) std::swap(E1, E2);
+
+		// step 1: z-axis (zNear) clipping
+		bool z0 = n_zNear * (E0 - v0) <= 0.f;
+		bool z1 = n_zNear * (E1 - v0) <= 0.f;
+		bool z2 = n_zNear * (E2 - v0) <= 0.f;
+		bool z3 = n_zNear * (E3 - v0) <= 0.f;
+
+		if (c == view_cell) z0 = Vector4f(0.f, 0.f, 1.f, 1.f) * E0 >= 0.f;
+		if (c == view_cell) z1 = Vector4f(0.f, 0.f, 1.f, 1.f) * E1 >= 0.f;
+		if (c == view_cell) z2 = Vector4f(0.f, 0.f, 1.f, 1.f) * E2 >= 0.f;
+		if (c == view_cell) z3 = Vector4f(0.f, 0.f, 1.f, 1.f) * E3 >= 0.f;
+
+		// behind zNear surface
+		if (!z0 && !z1 && !z2 && !z3) continue;
+		
+		// clipping
+		if (!z0) E0 = E3 + (E0 - E3) * ((E3 - v0) * n_zNear) / ((E3 - E0) * n_zNear);
+		if (!z1) E1 = E2 + (E1 - E2) * ((E2 - v0) * n_zNear) / ((E2 - E1) * n_zNear);
+		if (!z2) E2 = E1 + (E2 - E1) * ((E1 - v0) * n_zNear) / ((E1 - E2) * n_zNear);
+		if (!z3) E3 = E0 + (E3 - E0) * ((E0 - v0) * n_zNear) / ((E0 - E3) * n_zNear);
+		
+		// viewer on edge ?
+		float dx = (E3 - E0).cross(E1 - E0) * E0;
+		if (dx < 1.e-5 && !e->opaque)
+		{
+			Draw_View_Recursive(buffer, e->Neighbor(c), e, world_to_view, proj, view_volume, d + 1);
+			continue;
+		}
+
+		// step 2: x-axis (left-hand-side) clipping
+		bool l0 = n_Left * (E0 - v0) >= 0.f;
+		bool l1 = n_Left * (E1 - v0) >= 0.f;
+		bool l2 = n_Left * (E2 - v0) >= 0.f;
+		bool l3 = n_Left * (E3 - v0) >= 0.f;
+
+		// behind of left surface
+		if (!l0 && !l1 && !l2 && !l3) continue;
+
+		// clipping
+		if (!l0) E0 = E3 + (E0 - E3) * ((E3 - v0) * n_Left) / ((E3 - E0) * n_Left);
+		if (!l1) E1 = E2 + (E1 - E2) * ((E2 - v0) * n_Left) / ((E2 - E1) * n_Left);
+		if (!l2) E2 = E1 + (E2 - E1) * ((E1 - v0) * n_Left) / ((E1 - E2) * n_Left);
+		if (!l3) E3 = E0 + (E3 - E0) * ((E0 - v0) * n_Left) / ((E0 - E3) * n_Left);
+
+		// step 3: x-axis (right-hand-side) clipping
+		bool r0 = n_Right * (E0 - v3) <= 0.f;
+		bool r1 = n_Right * (E1 - v3) <= 0.f;
+		bool r2 = n_Right * (E2 - v3) <= 0.f;
+		bool r3 = n_Right * (E3 - v3) <= 0.f;
+
+		// behind of left surface
+		if (!r0 && !r1 && !r2 && !r3) continue;
+
+		// clipping
+		if (!r0) E0 = E3 + (E0 - E3) * ((E3 - v3) * n_Right) / ((E3 - E0) * n_Right);
+		if (!r1) E1 = E2 + (E1 - E2) * ((E2 - v3) * n_Right) / ((E2 - E1) * n_Right);
+		if (!r2) E2 = E1 + (E2 - E1) * ((E1 - v3) * n_Right) / ((E1 - E2) * n_Right);
+		if (!r3) E3 = E0 + (E3 - E0) * ((E0 - v3) * n_Right) / ((E0 - E3) * n_Right);
+
+		float avg_z = -(E0[2] + E1[2] + E2[2] + E3[2]) / 4.f;
+		Matrix44f new_view_volume(E0, E1, E2, E3);
+
+		// view -> screen
+		E0 = proj * E0;
+		E1 = proj * E1;
+		E2 = proj * E2;
+		E3 = proj * E3;
+
+		// scaling
+		E0 = E0 / E0[2];
+		E1 = E1 / E1[2];
+		E2 = E2 / E2[2];
+		E3 = E3 / E3[2];
+
+		Matrix44f m1(E0, E1, E2, E3);
+
+		// glBegin(GL_LINE_LOOP);
+		// glColor3f(e->color[0], e->color[1], e->color[2]);
+		// glVertex2f(m1[0][0] * 300.f, m1[1][0] * 300.f);
+		// glVertex2f(m1[0][1] * 300.f, m1[1][1] * 300.f);
+		// glVertex2f(m1[0][2] * 300.f, m1[1][2] * 300.f);
+		// glVertex2f(m1[0][3] * 300.f, m1[1][3] * 300.f);
+		// glEnd();
+
+		if (e->opaque)
+		{
+			buffer.push_back(std::tuple<float, float*, Matrix44f>(avg_z, e->color, m1));
+		}
+		else
+		{
+			Draw_View_Recursive(buffer, e->Neighbor(c), e, world_to_view, proj, new_view_volume, d + 1);
+		}
+    }
+}
 
 //**********************************************************************
 //
@@ -782,7 +960,7 @@ Save(const char *filename)
 	fprintf(f, "%d\n", num_vertices);
 	for ( i = 0 ; i < num_vertices ; i++ )
 		fprintf(f, "%g %g\n", vertices[i]->posn[Vertex::X],
-			      vertices[i]->posn[Vertex::Y]);
+				 vertices[i]->posn[Vertex::Y]);
 
 		fprintf(f, "%d\n", num_edges);
 	for ( i = 0 ; i < num_edges ; i++ )

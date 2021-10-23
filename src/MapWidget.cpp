@@ -150,31 +150,45 @@ handle(int event)
 	
 	float vdx = cos(Maze::To_Radians(maze->viewer_dir));
 	float vdy = sin(Maze::To_Radians(maze->viewer_dir));
+	float rdx = cos(Maze::To_Radians(maze->viewer_dir - 90.f));
+	float rdy = sin(Maze::To_Radians(maze->viewer_dir - 90.f));
 	
 	switch (event)
 	{
 		case FL_KEYBOARD:
 			down = false;
-			if (Fl::event_key() == FL_Up)
+			if (Fl::event_key() == FL_Up || Fl::event_key() == 'w')
 			{
 				dx = 0.1 * vdx;
 				dy = 0.1 * vdy;
 				down = true;
 			}
-			if (Fl::event_key() == FL_Down)
+			if (Fl::event_key() == FL_Down || Fl::event_key() == 's')
 			{
 				dx = -0.1 * vdx;
 				dy = -0.1 * vdy;
 				down = true;
 			}
-			if (Fl::event_key() == FL_Left)
+			if (Fl::event_key() == FL_Left || Fl::event_key() == 'a')
 			{
-				dr = 5.0;
+				dx = -0.1 * rdx;
+				dy = -0.1 * rdy;
 				down = true;
 			}
-			if (Fl::event_key() == FL_Right)
+			if (Fl::event_key() == FL_Right || Fl::event_key() == 'd')
 			{
-				dr = -5.0;
+				dx = 0.1 * rdx;
+				dy = 0.1 * rdy;
+				down = true;
+			}
+			if (Fl::event_key() == 'q')
+			{
+				dr = 5.f;
+				down = true;
+			}
+			if (Fl::event_key() == 'e')
+			{
+				dr = -5.f;
 				down = true;
 			}
 			return 1;

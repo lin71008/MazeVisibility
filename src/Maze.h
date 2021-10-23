@@ -20,6 +20,9 @@
 #define _MAZE_H_
 
 #include <FL/math.h> // Use FLTK's math header because it defines M_PI
+#include <vector>
+#include <tuple>
+
 #include "Matrix.h"
 #include "Cell.h"
 
@@ -152,6 +155,14 @@ class Maze {
 											// looking. Measured in degrees about the z
 											// axis, in the usual way.
 		float		viewer_fov;			// The horizontal field of view, in degrees.
+	
+	private:
+
+		// buffer(avg_z, color[3], Vertex[4]), render cell, edge_in, ...
+		void Draw_View_Recursive( std::vector<std::tuple<float, float*, Matrix44f>> &buffer,
+							 Cell *c, const Edge *ei, Matrix44f world_to_view, Matrix44f proj,
+							 Matrix44f view_volume, int d);
+
 };
 
 

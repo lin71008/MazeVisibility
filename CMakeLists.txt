@@ -10,7 +10,7 @@ set(CMAKE_CREATE_WIN32_EXE  "/subsystem:windowsce -mwindows")
 
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src/)
 
-add_Definitions("-D_XKEYCHECK_H")
+add_Definitions("-D_XKEYCHECK_H -g")
 add_definitions(-DPROJECT_DIR="${PROJECT_SOURCE_DIR}")
 
 add_executable(MazeVisibility
@@ -40,6 +40,12 @@ add_library(Matrix
     ${SRC_DIR}Matrix.cpp
     )
 
+add_executable(Test
+    ${SRC_DIR}test.cpp
+    )
+
 target_link_libraries(MazeVisibility fltk fltk_forms fltk_images fltk_jpeg fltk_png fltk_gl crypt32 comctl32)
 target_link_libraries(MazeVisibility opengl32 glew32 freeglut glu32)
 target_link_libraries(MazeVisibility Maze Matrix)
+
+target_link_libraries(Test Matrix)

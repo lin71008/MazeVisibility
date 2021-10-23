@@ -41,6 +41,7 @@ class Vector4f
         Vector4f operator+(const Vector4f &v0);
         Vector4f operator-(const Vector4f &v0);
         Vector4f operator*(const float &f);
+        Vector4f operator/(const float &f);
 
         static const Vector4f ZERO;
 
@@ -48,6 +49,8 @@ class Vector4f
 
         float operator*(const Vector4f &v0);
         float norm(void);
+
+        Vector4f cross(const Vector4f &v0);
 
     private:
 
