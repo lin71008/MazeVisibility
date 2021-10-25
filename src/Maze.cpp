@@ -675,18 +675,12 @@ Draw_View(const float focal_dist)
 		Matrix44f m2 = std::get<2>(*it);
 		float *c2 = std::get<1>(*it);
 		
-		glBegin(GL_TRIANGLES);
+		glBegin(GL_QUADS);
 		glColor3f(c2[0], c2[1], c2[2]);
 		glVertex2f(m2[0][0] * 300.f, m2[1][0] * 300.f);
 		glVertex2f(m2[0][1] * 300.f, m2[1][1] * 300.f);
 		glVertex2f(m2[0][2] * 300.f, m2[1][2] * 300.f);
-		glEnd();
-
-		glBegin(GL_TRIANGLES);
-		glColor3f(.9 * c2[0], .9 * c2[1], .9 * c2[2]);
-		glVertex2f(m2[0][2] * 300.f, m2[1][2] * 300.f);
 		glVertex2f(m2[0][3] * 300.f, m2[1][3] * 300.f);
-		glVertex2f(m2[0][0] * 300.f, m2[1][0] * 300.f);
 		glEnd();
 	}
 }
@@ -797,14 +791,6 @@ Draw_View_Recursive( std::vector<std::tuple<float, float*, Matrix44f>> &buffer, 
 		E3 = E3 / E3[2];
 
 		Matrix44f m1(E0, E1, E2, E3);
-
-		// glBegin(GL_LINE_LOOP);
-		// glColor3f(e->color[0], e->color[1], e->color[2]);
-		// glVertex2f(m1[0][0] * 300.f, m1[1][0] * 300.f);
-		// glVertex2f(m1[0][1] * 300.f, m1[1][1] * 300.f);
-		// glVertex2f(m1[0][2] * 300.f, m1[1][2] * 300.f);
-		// glVertex2f(m1[0][3] * 300.f, m1[1][3] * 300.f);
-		// glEnd();
 
 		if (e->opaque)
 		{

@@ -10,7 +10,7 @@ set(CMAKE_CREATE_WIN32_EXE  "/subsystem:windowsce -mwindows")
 
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src/)
 
-add_Definitions("-D_XKEYCHECK_H -g")
+add_Definitions("-D_XKEYCHECK_H")
 add_definitions(-DPROJECT_DIR="${PROJECT_SOURCE_DIR}")
 
 add_executable(MazeVisibility
