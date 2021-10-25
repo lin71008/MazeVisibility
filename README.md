@@ -6,9 +6,12 @@
 * [Requirement](#requirement)
 * [Build](#build)
 * [Run](#run)
+   - [Load Map File](#load-map-file)
+   - [Control](#control)
 * [Develop Documentation](#develop-documentation)
    - [Maze File Structure](#maze-file-structure)
    - [Render Algorithm](#render-algorithm)
+   - [Matrix Calculation](#matrix-calculation)
 
 
 ## Requirement
@@ -49,6 +52,25 @@ and run `make all` in `build` folder.
 
 All executable files can be run in console without argument.
 
+### Load Map File
+
+Just click the "Load Maze" button in the Map View form and enter your file path, then click the "OK" button.
+
+![Load Map](./assets/Load-Map.png "Load Map")
+
+### Control
+
+In Maze View, you can use the mouse to control the camera direction (not including the z-axis) and position by
+holding down the left button and dragging.
+
+![Maze View](./assets/Maze-View.png "Maze View")
+
+In Map View, you can use WASD key to control the camera position and use QE key to control camera direction.
+
+![Map View](./assets/Map-View.png "Map View")
+
+The two windows are synchronized with each other.
+
 ## Develop Documentation
 ### Maze file structure
 
@@ -58,7 +80,7 @@ Following is a example mazes file of a two by two mazes, locate at `(0, 0)` to `
 
 and contain an wall locate at `(0, 2)` to `(2, 2)`.
 
-```text
+```
 # how many vertices
 # = W * H
 9
@@ -130,3 +152,31 @@ and contain an wall locate at `(0, 2)` to `(2, 2)`.
 4. Clipping view volume, go to adjacent cell, and then recursive step 2 to 4.
 
 5. Render surface at render buffer using the first-in-last-out order.
+
+### Matrix Calculation
+
+Let $A={A_0, A_1, A_2, ...}$ be a set of points in three dimensions,
+and $C={X_C, Y_C, Z_C}$, $D={X_D, Y_D, Z_D}$ be the points in three dimensions.
+
+If we would to move $A$ coordinate such that $C$ become new Origin,
+and rotate coordinate such that $D$ become new x-axis.
+
+Instead of doing it one-by-one, step-by-step.
+
+We can expand all points dimensions to four dimensions,
+and let the new dimensions equal to $1$.
+
+Then $A-C$ wound be equal to
+
+$$\begin{pmatrix}1 & 0 & 0 & -X_C \\ 0 & 1 & 0 & -Y_C \\ 0 & 0 & 1 & -Z_C \\ 0 & 0 & 0 & 1\end{pmatrix} \begin{pmatrix}X_{A_0} \\ Y_{A_0} \\ Z_{A_0} \\ 1\end{pmatrix}$$
+
+and we can calculate all point at once.
+
+The same principle applies to rotation and scaling.
+
+$$\begin{pmatrix} X_{Scaling} & 0 & 0 & 0 \\ 0 & Y_{Scaling} & 0 & 0 \\ 0 & 0 & Z_{Scaling} & 0 \\ 0 & 0 & 0 & 1\end{pmatrix} \begin{pmatrix} \cos(\theta) & \sin(\theta) & 0 & 0 \\ \sin(\theta) & \cos(\theta) & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1\end{pmatrix} \begin{pmatrix}1 & 0 & 0 & -X_C \\ 0 & 1 & 0 & -Y_C \\ 0 & 0 & 1 & -Z_C \\ 0 & 0 & 0 & 1\end{pmatrix} \begin{pmatrix}X_{A_0} \\ Y_{A_0} \\ Z_{A_0} \\ 1\end{pmatrix}$$
+
+Furthermore, we can pre-calculate all transformation matrices, rotation matrices, and reflection matrices as a matrix,
+and then calculate all points at once to get the final result.
+
+$$ \begin{pmatrix}X'_{A_0} \\ Y'_{A_0} \\ Z'_{A_0} \\ 1\end{pmatrix} = T \begin{pmatrix}X_{A_0} \\ Y_{A_0} \\ Z_{A_0} \\ 1\end{pmatrix}$$
